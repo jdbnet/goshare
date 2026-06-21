@@ -43,6 +43,7 @@ func (s *Server) Start() error {
 func (s *Server) routes() {
 	s.mux.HandleFunc("/login", s.handleLogin)
 	s.mux.HandleFunc("/logout", s.handleLogout)
+	s.mux.HandleFunc("/icon.png", s.handleIcon)
 
 	s.mux.HandleFunc("/", s.requireAuth(s.handleIndex))
 	s.mux.HandleFunc("/api/upload", s.requireAuthAPI(s.handleUpload))
@@ -135,6 +136,16 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 	http.Redirect(w, r, "/login", http.StatusFound)
+}
+
+func (s *Server) handleIcon(w http.ResponseWriter, r *http.Request) {
+	data, err := templateFS.ReadFile("templates/icon.png")
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Write(data)
 }
 
 func formatBytes(b int64) string {
@@ -239,8 +250,6 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	retention := r.FormValue("retention")
 	var duration time.Duration
 	switch retention {
-	case "1m": // for testing
-		duration = 1 * time.Minute
 	case "1h":
 		duration = 1 * time.Hour
 	case "12h":

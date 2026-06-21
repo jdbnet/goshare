@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoShare - Login</title>
+    <link rel="icon" type="image/png" href="/icon.png">
     <style>
         :root {
             --bg: #0a0a0a;
@@ -28,24 +29,26 @@
             height: 100vh;
         }
 
-        .login-box {
+        .login-card {
             background: var(--surface);
-            padding: 3rem;
-            border-radius: 8px;
             border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2.5rem;
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-align: center;
         }
 
-        .login-box h1 {
+        h1 {
             margin-top: 0;
-            margin-bottom: 2rem;
             font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
         }
-        
-        .login-box h1 span {
+
+        h1 span {
             color: var(--accent);
         }
 
@@ -54,61 +57,67 @@
             text-align: left;
         }
 
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 0.5rem;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .form-group input {
+        input {
             width: 100%;
-            padding: 0.75rem;
+            box-sizing: border-box;
             background: var(--bg);
             border: 1px solid var(--border);
             color: var(--text-primary);
+            padding: 0.75rem 1rem;
             border-radius: 4px;
             font-family: inherit;
-            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.2s;
         }
 
-        .form-group input:focus {
+        input:focus {
             outline: none;
             border-color: var(--accent);
         }
 
         .btn {
+            width: 100%;
             background: var(--accent);
             color: #000;
-            border: none;
+            border: 1px solid var(--accent);
             padding: 0.75rem;
             border-radius: 4px;
             cursor: pointer;
             font-family: inherit;
             font-weight: 600;
             font-size: 1rem;
-            width: 100%;
-            transition: all 0.2s;
+            margin-top: 1rem;
+            transition: all 0.2s ease;
         }
 
         .btn:hover {
             background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            box-shadow: 0 0 10px rgba(33, 209, 152, 0.3);
         }
 
         .error {
             color: var(--error);
             font-size: 0.875rem;
             margin-bottom: 1.5rem;
-            background: rgba(239, 68, 68, 0.1);
-            padding: 0.75rem;
-            border-radius: 4px;
-            border: 1px solid rgba(239, 68, 68, 0.3);
         }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h1>Go<span>Share</span></h1>
+    <div class="login-card">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2rem;">
+            <img src="/icon.png" alt="" style="height: 2.5rem; margin-right: 1rem; border-radius: 4px;" onerror="this.style.display='none'">
+            <h1 style="margin-bottom: 0;">Go<span>Share</span></h1>
+        </div>
         
         {{if .Error}}
         <div class="error">{{.Error}}</div>
@@ -116,12 +125,12 @@
 
         <form method="POST" action="/login">
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required autofocus>
+                <label>Username</label>
+                <input type="text" name="username" required autofocus autocomplete="username">
             </div>
             <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                <label>Password</label>
+                <input type="password" name="password" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn">Sign In</button>
         </form>
