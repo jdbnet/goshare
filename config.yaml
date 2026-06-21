@@ -1,0 +1,9 @@
+server:
+    port: 8080
+auth:
+    enabled: false
+    username: admin
+    password: password
+storage:
+    dir: ./data
+    max_upload_size: 104857600
