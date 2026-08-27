@@ -11,9 +11,17 @@ import (
 	"goshare/web"
 )
 
+var Version = "dev"
+
 func main() {
+	showVersion := flag.Bool("version", false, "print version")
 	configPath := flag.String("config", "/etc/goshare/config.yaml", "Path to configuration file")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(Version)
+		return
+	}
 
 	cfg, err := config.LoadConfig(*configPath)
 	if err != nil {

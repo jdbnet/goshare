@@ -1,0 +1,63 @@
+version: 2
+
+project_name: goshare
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: goshare
+    main: .
+    binary: goshare
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+
+archives:
+  - id: binaries
+    ids:
+      - goshare
+    format: binary
+    name_template: "goshare-{{ .Arch }}"
+
+nfpms:
+  - id: goshare
+    package_name: goshare
+    ids:
+      - goshare
+    vendor: JDB-NET
+    homepage: https://github.com/jdbnet/goshare
+    maintainer: Jamie <jamie@jdbnet.co.uk>
+    description: |-
+      Lightweight file-sharing web application written in Go.
+      Upload, download, and delete files with password protection,
+      expiration times, and an embedded web UI.
+    formats:
+      - deb
+    bindir: /usr/local/bin
+    file_name_template: "goshare_{{ .Version }}_{{ .Arch }}"
+    contents:
+      - src: docs/goshare.service
+        dst: /lib/systemd/system/goshare.service
+      - src: docs/config.example.yaml
+        dst: /etc/goshare/config.yaml
+        type: config|noreplace
+    scripts:
+      postinstall: docs/postinstall.sh
+    deb:
+      compression: gzip
+
+changelog:
+  disable: true
+
+release:
+  github:
+    owner: jdbnet
+    name: goshare

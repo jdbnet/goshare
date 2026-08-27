@@ -29,13 +29,14 @@ This will create an executable named `goshare`.
 
 ## Installation
 
-Download the pre-compiled binary:
+Install from the Aptuary APT repository:
 
 ```bash
-wget https://apps.jdbnet.co.uk/goshare
-chmod +x goshare
-sudo mv goshare /usr/local/bin/
+curl -fsSL https://apt.jdbnet.co.uk/install/stable.sh | sudo bash
+sudo apt install goshare
 ```
+
+The `.deb` installs the binary, a systemd unit, and an example config at `/etc/goshare/config.yaml`.
 
 ## Configuration
 
@@ -59,7 +60,7 @@ auth:
     username: admin
     password: password
 storage:
-    dir: ./data
+    dir: /var/lib/goshare/data
     max_upload_size: 104857600
 ```
 
@@ -71,11 +72,21 @@ After building, start the server with:
 ./goshare
 ```
 
-The server will start on port 8080 (unless configured otherwise), and files will be stored in the `./data` directory relative to where it was executed.
+The server will start on port 8080 (unless configured otherwise). When installed via the `.deb`, files are stored in `/var/lib/goshare/data`.
 
 ## Running as a Service (Systemd)
 
-We highly recommend running GoShare via Systemd so that it starts automatically on boot and runs continuously in the background.
+The `.deb` package installs `/lib/systemd/system/goshare.service` and creates a `goshare` system user with `/var/lib/goshare` for data storage. Enable and start the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable goshare
+sudo systemctl start goshare
+```
+
+### Manual setup
+
+If you built from source instead of installing the package:
 
 1. Create a configuration directory and move your `config.yaml` there:
    ```bash
@@ -83,21 +94,12 @@ We highly recommend running GoShare via Systemd so that it starts automatically 
    sudo cp config.yaml /etc/goshare/config.yaml
    ```
 
-2. Create a systemd service file at `/etc/systemd/system/goshare.service`:
-   ```ini
-   [Unit]
-   Description=GoShare
-   After=network.target
-
-   [Service]
-   Type=simple
-   User=root
-   ExecStart=/usr/local/bin/goshare --config /etc/goshare/config.yaml
-   Restart=on-failure
-   RestartSec=5
-
-   [Install]
-   WantedBy=multi-user.target
+2. Copy the systemd unit from `docs/goshare.service` to `/etc/systemd/system/goshare.service`, create the `goshare` user, and set up data storage:
+   ```bash
+   sudo useradd -r -s /usr/sbin/nologin goshare || true
+   sudo mkdir -p /var/lib/goshare/data
+   sudo chown -R goshare:goshare /var/lib/goshare
+   sudo cp docs/goshare.service /etc/systemd/system/
    ```
 
 3. Enable and start the service:
