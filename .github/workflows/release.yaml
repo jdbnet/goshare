@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 env:
   APTUARY_DISTRIBUTION: stable
@@ -31,7 +32,7 @@ jobs:
     if: needs.version.outputs.version != ''
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: v${{ needs.version.outputs.version }}
           fetch-depth: 0
@@ -40,7 +41,7 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - uses: goreleaser/goreleaser-action@v6
+      - uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: release --clean
@@ -66,3 +67,27 @@ jobs:
               -F "file=@${deb}" \
               "${BASE}/api/v1/upload?${QUERY}"
           done
+
+      - name: Prepare container image
+        run: |
+          BIN="$(find dist -maxdepth 2 -type f -name goshare | head -1)"
+          test -n "$BIN"
+          cp "$BIN" ./goshare
+          chmod +x ./goshare
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/jdbnet/goshare:v${{ needs.version.outputs.version }}
+            ghcr.io/jdbnet/goshare:latest

@@ -40,13 +40,24 @@ The `.deb` installs the binary, a systemd unit, and an example config at `/etc/g
 
 ## Configuration
 
-By default, GoShare looks for its configuration file at `/etc/goshare/config.yaml`. If the file does not exist, it will attempt to generate a default one.
+By default, GoShare loads `/etc/goshare/config.yaml` when present. If the file is missing, built-in defaults apply (and can be overridden with environment variables).
 
 You can specify a custom configuration file path using the `-config` flag:
 
 ```bash
 ./goshare -config ./config.yaml
 ```
+
+Environment variables (override file values):
+
+| Variable | Description |
+|----------|-------------|
+| `GOSHARE_SERVER_PORT` | HTTP port (default `8080`) |
+| `GOSHARE_STORAGE_DIR` | Directory for uploaded files |
+| `GOSHARE_MAX_UPLOAD_SIZE` | Max upload size in bytes |
+| `GOSHARE_AUTH_ENABLED` | `true` or `false` |
+| `GOSHARE_AUTH_USERNAME` | Upload auth username |
+| `GOSHARE_AUTH_PASSWORD` | Upload auth password |
 
 ### Default Configuration
 
@@ -108,3 +119,23 @@ If you built from source instead of installing the package:
    sudo systemctl enable goshare
    sudo systemctl start goshare
    ```
+
+## Docker
+
+Images are published to `ghcr.io/jdbnet/goshare` on each release. The container uses the same binary as the `.deb` / GitHub release and configures itself via environment variables (no `config.yaml` required).
+
+```bash
+docker run -d --name goshare \
+  -p 8080:8080 \
+  -v goshare-data:/var/lib/goshare/data \
+  -e GOSHARE_AUTH_ENABLED=true \
+  -e GOSHARE_AUTH_USERNAME=admin \
+  -e GOSHARE_AUTH_PASSWORD=changeme \
+  ghcr.io/jdbnet/goshare:latest
+```
+
+Local image build (after `go build -o goshare .` or copying a release binary to `./goshare`):
+
+```bash
+docker build -t goshare:local .
+```
