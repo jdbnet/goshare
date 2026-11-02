@@ -302,6 +302,7 @@
                             <td>{{timeUntil .ExpiresAt}}</td>
                             <td style="text-align: right;">
                                 <button class="btn btn-sm btn-outline" onclick="downloadFile('{{.ID}}')">Download</button>
+                                <button class="btn btn-sm btn-outline" onclick="copyShareLink('{{.ShareToken}}')">Copy link</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteFile('{{.ID}}', '{{.OriginalName}}')">Delete</button>
                             </td>
                         </tr>
@@ -318,6 +319,16 @@
     <script>
         function downloadFile(id) {
             window.location.href = '/api/download?id=' + encodeURIComponent(id);
+        }
+
+        async function copyShareLink(token) {
+            const url = window.location.origin + '/d/' + encodeURIComponent(token);
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Share link copied to clipboard');
+            } catch (e) {
+                prompt('Copy this link:', url);
+            }
         }
 
         async function deleteFile(id, name) {

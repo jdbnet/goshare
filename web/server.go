@@ -44,6 +44,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("/login", s.handleLogin)
 	s.mux.HandleFunc("/logout", s.handleLogout)
 	s.mux.HandleFunc("/icon.png", s.handleIcon)
+	s.mux.HandleFunc("GET /d/{token}", s.handleShareDownload)
 
 	s.mux.HandleFunc("/", s.requireAuth(s.handleIndex))
 	s.mux.HandleFunc("/api/upload", s.requireAuthAPI(s.handleUpload))
@@ -275,6 +276,27 @@ func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+func (s *Server) serveFileDownload(w http.ResponseWriter, r *http.Request, meta storage.FileMeta) {
+	if time.Now().After(meta.ExpiresAt) {
+		http.Error(w, "File not found or expired", http.StatusNotFound)
+		return
+	}
+	filePath := s.manager.GetFilePath(meta.ID)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", meta.OriginalName))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	http.ServeFile(w, r, filePath)
+}
+
+func (s *Server) handleShareDownload(w http.ResponseWriter, r *http.Request) {
+	token := r.PathValue("token")
+	meta, ok := s.manager.GetFileByShareToken(token)
+	if !ok {
+		http.Error(w, "File not found or expired", http.StatusNotFound)
+		return
+	}
+	s.serveFileDownload(w, r, meta)
+}
+
 func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -293,10 +315,7 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath := s.manager.GetFilePath(id)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", meta.OriginalName))
-	w.Header().Set("Content-Type", "application/octet-stream")
-	http.ServeFile(w, r, filePath)
+	s.serveFileDownload(w, r, meta)
 }
 
 func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {

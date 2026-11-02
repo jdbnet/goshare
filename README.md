@@ -59,6 +59,8 @@ Environment variables (override file values):
 | `GOSHARE_AUTH_USERNAME` | Upload auth username |
 | `GOSHARE_AUTH_PASSWORD` | Upload auth password |
 
+When auth is enabled, anyone with a file's share link can download that file without logging in. Share links look like `https://your-host/d/{token}`. Use **Copy link** in the file list to generate them; keep links private if the file is sensitive.
+
 ### Default Configuration
 
 A sample default configuration:

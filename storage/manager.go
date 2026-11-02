@@ -17,6 +17,7 @@ import (
 
 type FileMeta struct {
 	ID           string    `json:"id"`
+	ShareToken   string    `json:"share_token"`
 	OriginalName string    `json:"original_name"`
 	Size         int64     `json:"size"`
 	UploadedAt   time.Time `json:"uploaded_at"`
@@ -65,7 +66,25 @@ func (m *Manager) loadMetadata() error {
 	if err := json.Unmarshal(data, &m.files); err != nil {
 		return err
 	}
+	m.backfillShareTokens()
 	return nil
+}
+
+func (m *Manager) backfillShareTokens() {
+	changed := false
+	for id, meta := range m.files {
+		if meta.ShareToken != "" {
+			continue
+		}
+		meta.ShareToken = generateShareToken()
+		m.files[id] = meta
+		changed = true
+	}
+	if changed {
+		if err := m.saveMetadata(); err != nil {
+			logger.Error("Failed to save metadata after share token backfill: %v", err)
+		}
+	}
 }
 
 func (m *Manager) saveMetadata() error {
@@ -79,6 +98,12 @@ func (m *Manager) saveMetadata() error {
 
 func generateID() string {
 	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
+func generateShareToken() string {
+	b := make([]byte, 32)
 	rand.Read(b)
 	return hex.EncodeToString(b)
 }
@@ -100,6 +125,7 @@ func (m *Manager) SaveFile(originalName string, r io.Reader, size int64, expires
 
 	meta := FileMeta{
 		ID:           id,
+		ShareToken:   generateShareToken(),
 		OriginalName: originalName,
 		Size:         size,
 		UploadedAt:   time.Now(),
@@ -122,6 +148,20 @@ func (m *Manager) GetFileMeta(id string) (FileMeta, bool) {
 	defer m.metaMutex.RUnlock()
 	meta, ok := m.files[id]
 	return meta, ok
+}
+
+func (m *Manager) GetFileByShareToken(token string) (FileMeta, bool) {
+	if token == "" {
+		return FileMeta{}, false
+	}
+	m.metaMutex.RLock()
+	defer m.metaMutex.RUnlock()
+	for _, meta := range m.files {
+		if meta.ShareToken == token {
+			return meta, true
+		}
+	}
+	return FileMeta{}, false
 }
 
 func (m *Manager) GetFilePath(id string) string {
